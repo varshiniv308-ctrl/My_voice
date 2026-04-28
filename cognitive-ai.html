@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cognitive AI — Executive Intelligence Suite</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  --bg: #07111f;
+  --bg2: #0b1929;
+  --surface: rgba(255,255,255,0.05);
+  --surface2: rgba(255,255,255,0.09);
+  --border: rgba(0,240,255,0.15);
+  --primary: #00f0ff;
+  --secondary: #7b61ff;
+  --text: #ffffff;
+  --muted: #9fb3c8;
+  --success: #00ff95;
+  --danger: #ff4d6d;
+  --warning: #ffb800;
+  --sidebar-w: 260px;
+  --font: 'Syne', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+/* ─── PAGES ─── */
+.page { display: none; min-height: 100vh; }
+.page.active { display: flex; }
+
+/* ─── LOADER ─── */
+#loader {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9999; transition: opacity .5s, visibility .5s;
+}
+#loader.hidden { opacity: 0; visibility: hidden; }
+.loader-ring {
+  width: 60px; height: 60px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── TOASTS ─── */
+#toast-container {
+  position: fixed; bottom: 24px; right: 24px;
+  z-index: 9000; display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  padding: 12px 20px; border-radius: 10px;
+  background: var(--surface2); border: 1px solid var(--border);
+  backdrop-filter: blur(20px); font-size: .85rem;
+  animation: slideUp .3s ease; min-width: 240px;
+}
+.toast.success { border-color: var(--success); color: var(--success); }
+.toast.danger { border-color: var(--danger); color: var(--danger); }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ─── MODAL ─── */
+#modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.7);
+  backdrop-filter: blur(8px); z-index: 8000;
+  display: none; align-items: center; justify-content: center;
+}
+#modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 36px; max-width: 480px; width: 90%;
+  animation: fadeIn .3s ease;
+}
+.modal h3 { font-size: 1.3rem; margin-bottom: 12px; }
+.modal p { color: var(--muted); font-size: .9rem; line-height: 1.6; margin-bottom: 24px; }
+.modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+
+/* ─── BUTTONS ─── */
+.btn {
+  padding: 10px 22px; border-radius: 10px; border: none;
+  font-family: var(--font); font-size: .85rem; font-weight: 600;
+  cursor: pointer; transition: all .25s; letter-spacing: .03em;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #000; box-shadow: 0 0 20px rgba(0,240,255,.25);
+}
+.btn-primary:hover { box-shadow: 0 0 35px rgba(0,240,255,.5); transform: translateY(-1px); }
+.btn-ghost {
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-ghost:hover { background: var(--surface2); border-color: var(--primary); }
+.btn-danger { background: rgba(255,77,109,.15); border: 1px solid var(--danger); color: var(--danger); }
+
+/* ─── SIDEBAR ─── */
+.sidebar {
+  width: var(--sidebar-w); min-height: 100vh;
+  background: rgba(11,25,41,.95); border-right: 1px solid var(--border);
+  backdrop-filter: blur(20px); display: flex; flex-direction: column;
+  padding: 24px 16px; position: fixed; left: 0; top: 0; bottom: 0;
+  z-index: 100; transition: transform .3s;
+}
+.sidebar.collapsed { transform: translateX(-100%); }
+.sidebar-logo {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 8px 28px; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+}
+.sidebar-logo .orb {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 800; color: #000;
+  box-shadow: 0 0 16px rgba(0,240,255,.4);
+}
+.sidebar-logo span { font-size: 1rem; font-weight: 800; letter-spacing: -.02em; }
+.sidebar-logo span em { color: var(--primary); font-style: normal; }
+
+.nav-section { font-size: .65rem; letter-spacing: .12em; color: var(--muted);
+  padding: 0 8px; margin-bottom: 8px; text-transform: uppercase; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  font-size: .85rem; font-weight: 500; color: var(--muted);
+  transition: all .2s; margin-bottom: 2px;
+}
+.nav-item:hover { background: var(--surface); color: var(--text); }
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(0,240,255,.12), rgba(123,97,255,.12));
+  color: var(--primary); border: 1px solid rgba(0,240,255,.2);
+}
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+.sidebar-bottom { margin-top: auto; padding-top: 20px; border-top: 1px solid var(--border); }
+.user-card {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  transition: background .2s;
+}
+.user-card:hover { background: var(--surface); }
+.avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; font-weight: 700; color: #000; flex-shrink: 0;
+}
+.user-info { flex: 1; }
+.user-info .name { font-size: .8rem; font-weight: 600; }
+.user-info .role { font-size: .7rem; color: var(--muted); }
+
+/* ─── MAIN AREA ─── */
+.main {
+  margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column;
+  min-height: 100vh;
+}
+.topbar {
+  height: 64px; background: rgba(11,25,41,.8);
+  backdrop-filter: blur(20px); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 16px;
+  padding: 0 28px; position: sticky; top: 0; z-index: 90;
+}
+.topbar-title { font-size: 1rem; font-weight: 700; flex: 1; }
+.topbar-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 6px 12px; width: 220px;
+}
+.topbar-search input {
+  background: none; border: none; outline: none;
+  font-family: var(--font); font-size: .8rem; color: var(--text); width: 100%;
+}
+.topbar-search input::placeholder { color: var(--muted); }
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 2px 10px; border-radius: 20px; font-size: .7rem; font-weight: 600;
+}
+.badge-success { background: rgba(0,255,149,.15); color: var(--success); border: 1px solid rgba(0,255,149,.3); }
+.badge-warning { background: rgba(255,184,0,.15); color: var(--warning); border: 1px solid rgba(255,184,0,.3); }
+.badge-danger { background: rgba(255,77,109,.15); color: var(--danger); border: 1px solid rgba(255,77,109,.3); }
+.badge-info { background: rgba(0,240,255,.1); color: var(--primary); border: 1px solid rgba(0,240,255,.25); }
+
+#hamburger {
+  display: none; background: none; border: none; cursor: pointer;
+  padding: 4px; color: var(--text);
+}
+
+/* ─── CONTENT ─── */
+.content { padding: 28px; flex: 1; }
+
+/* ─── CARDS ─── */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px;
+  backdrop-filter: blur(12px); transition: transform .25s, box-shadow .25s;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,240,255,.08); }
+
+.card-title {
+  font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px;
+}
+.card-value { font-size: 2rem; font-weight: 800; line-height: 1; }
+.card-value span { font-size: .75rem; color: var(--muted); font-weight: 400; }
+.card-delta { font-size: .75rem; color: var(--success); margin-top: 4px; }
+
+/* ─── GRIDS ─── */
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ─── TABLE ─── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left; padding: 10px 14px;
+  font-size: .65rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); border-bottom: 1px solid var(--border);
+}
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: rgba(255,255,255,.03); }
+tbody td { padding: 12px 14px; font-size: .82rem; border-bottom: 1px solid rgba(255,255,255,.04); }
+
+/* ─── FORM ─── */
+.form-group { margin-bottom: 18px; }
+.form-label { font-size: .75rem; color: var(--muted); margin-bottom: 6px; display: block; letter-spacing: .05em; }
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; color: var(--text);
+  font-family: var(--font); font-size: .85rem; outline: none;
+  transition: border-color .2s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,240,255,.08);
+}
+.form-select { appearance: none; cursor: pointer; }
+.form-select option { background: var(--bg2); }
+
+/* ─── TOGGLE ─── */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-info .label { font-size: .85rem; font-weight: 600; }
+.toggle-info .desc { font-size: .75rem; color: var(--muted); margin-top: 2px; }
+.toggle {
+  position: relative; width: 44px; height: 24px;
+  background: var(--surface2); border-radius: 12px;
+  cursor: pointer; transition: background .25s; flex-shrink: 0;
+  border: 1px solid var(--border);
+}
+.toggle.on { background: linear-gradient(135deg, var(--primary), var(--secondary)); border-color: transparent; }
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; transition: transform .25s;
+}
+.toggle.on::after { transform: translateX(20px); }
+
+/* ─── SLIDER ─── */
+.slider-row { margin-bottom: 16px; }
+.slider-label { display: flex; justify-content: space-between; font-size: .8rem; margin-bottom: 6px; }
+.slider-label span { color: var(--muted); font-size: .75rem; }
+input[type=range] {
+  -webkit-appearance: none; width: 100%; height: 4px;
+  background: var(--surface2); border-radius: 2px; outline: none; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--primary); box-shadow: 0 0 8px rgba(0,240,255,.5);
+}
+
+/* ─── SECTION HEADER ─── */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title { font-size: 1rem; font-weight: 700; }
+
+/* ─── PAGINATION ─── */
+.pagination { display: flex; gap: 6px; align-items: center; justify-content: center; margin-top: 20px; }
+.page-btn {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font); font-size: .8rem;
+  cursor: pointer; transition: all .2s;
+}
+.page-btn:hover, .page-btn.active {
+  background: var(--primary); color: #000; border-color: var(--primary);
+  box-shadow: 0 0 12px rgba(0,240,255,.3);
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes glowPulse { 0%,100% { box-shadow: 0 0 20px rgba(0,240,255,.3); } 50% { box-shadow: 0 0 45px rgba(0,240,255,.7); } }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+@keyframes orbRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes waveMove { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(.2); } }
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+
+.fade-in { animation: fadeIn .5s ease forwards; }
+.fade-in-up { animation: fadeInUp .6s ease forwards; }
+
+/* ============================================================
+   SCREEN 1 — LANDING / AUTH
+   ============================================================ */
+#page-landing {
+  flex-direction: column; position: relative; overflow: hidden;
+}
+
+/* Neural background */
+.neural-bg {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+}
+.neural-bg canvas { width: 100%; height: 100%; }
+
+/* Hero */
+.hero {
+  position: relative; z-index: 2; text-align: center;
+  padding: 80px 24px 48px;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,240,255,.08); border: 1px solid rgba(0,240,255,.25);
+  border-radius: 20px; padding: 6px 16px; font-size: .7rem;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--primary);
+  margin-bottom: 24px;
+}
+.dot-pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--primary); animation: glowPulse 2s infinite;
+}
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 5rem); font-weight: 800;
+  line-height: 1.05; letter-spacing: -.03em; margin-bottom: 16px;
+}
+.hero h1 .gradient-text {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero p { font-size: 1.1rem; color: var(--muted); max-width: 520px; margin: 0 auto 32px; line-height: 1.6; }
+.hero-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* Orb */
+.orb-container {
+  position: relative; z-index: 2; display: flex;
+  justify-content: center; margin: 0 auto 48px; width: 200px; height: 200px;
+}
+.orb-main {
+  width: 160px; height: 160px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(0,240,255,.6), rgba(123,97,255,.4), transparent 70%);
+  animation: float 4s ease-in-out infinite;
+  box-shadow: 0 0 60px rgba(0,240,255,.3), 0 0 120px rgba(123,97,255,.15);
+  position: absolute; top: 20px; left: 20px;
+}
+.orb-ring {
+  position: absolute; inset: 0; border-radius: 50%;
+  border: 1px solid rgba(0,240,255,.2);
+  animation: orbRotate 8s linear infinite;
+}
+.orb-ring::before {
+  content: ''; position: absolute; top: -3px; left: 50%;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--primary); box-shadow: 0 0 10px var(--primary);
+}
+.orb-ring2 {
+  position: absolute; inset: 12px; border-radius: 50%;
+  border: 1px solid rgba(123,97,255,.2);
+  animation: orbRotate 12s linear infinite reverse;
+}
+.orb-ring2::before {
+  content: ''; position: absolute; top: -3px; left: 50%;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--secondary); box-shadow: 0 0 8px var(--secondary);
+}
+
+/* Auth container */
+.auth-container {
+  position: relative; z-index: 2;
+  display: flex; justify-content: center; gap: 24px;
+  padding: 0 24px 60px; flex-wrap: wrap;
+}
+.auth-card {
+  background: rgba(11,25,41,.85); border: 1px solid var(--border);
+  border-radius: 20px; padding: 32px; width: 360px;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 0 40px rgba(0,240,255,.06);
+  animation: fadeInUp .6s ease;
+}
+.auth-card h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; }
+.auth-card .sub { font-size: .8rem; color: var(--muted); margin-bottom: 24px; }
+.auth-card .divider {
+  display: flex; align-items: center; gap: 10px;
+  margin: 16px 0; color: var(--muted); font-size: .75rem;
+}
+.auth-card .divider::before, .auth-card .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+/* Feature cards */
+.features-row {
+  position: relative; z-index: 2;
+  display: flex; justify-content: center; gap: 16px;
+  padding: 0 24px 80px; flex-wrap: wrap;
+}
+.feature-card {
+  background: rgba(255,255,255,.04); border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px; width: 220px;
+  backdrop-filter: blur(12px); text-align: center;
+  transition: all .25s;
+}
+.feature-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,240,255,.1); }
+.feature-icon {
+  width: 44px; height: 44px; border-radius: 12px; margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+}
+.fi-1 { background: rgba(0,240,255,.12); }
+.fi-2 { background: rgba(123,97,255,.12); }
+.fi-3 { background: rgba(0,255,149,.12); }
+.feature-card h4 { font-size: .85rem; font-weight: 700; margin-bottom: 6px; }
+.feature-card p { font-size: .75rem; color: var(--muted); line-height: 1.5; }
+
+/* ============================================================
+   SCREEN 2 — DASHBOARD
+   ============================================================ */
+#page-dashboard { flex-direction: row; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px; }
+.kpi-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px;
+  position: relative; overflow: hidden; transition: all .25s;
+}
+.kpi-card::before {
+  content: ''; position: absolute; top: -40px; right: -20px;
+  width: 90px; height: 90px; border-radius: 50%;
+  opacity: .06;
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,240,255,.1); }
+.kpi-label { font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.kpi-value { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+.kpi-unit { font-size: .8rem; color: var(--muted); }
+.kpi-sub { font-size: .72rem; color: var(--success); margin-top: 6px; }
+
+/* Spectrum */
+.spectrum-bar {
+  display: flex; align-items: flex-end; gap: 3px; height: 60px; margin: 8px 0;
+}
+.spec-bar {
+  flex: 1; background: linear-gradient(to top, var(--primary), transparent);
+  border-radius: 2px; opacity: .8; animation: waveMove 1.2s ease-in-out infinite;
+  min-height: 4px;
+}
+.spec-bar:nth-child(2n) { animation-delay: .15s; }
+.spec-bar:nth-child(3n) { animation-delay: .3s; }
+.spec-bar:nth-child(4n) { animation-delay: .45s; }
+.spec-bar:nth-child(5n) { animation-delay: .6s; }
+.spec-bar:nth-child(7n) { background: linear-gradient(to top, var(--secondary), transparent); }
+
+/* Timeline */
+.timeline { display: flex; flex-direction: column; gap: 12px; }
+.timeline-item { display: flex; gap: 12px; align-items: flex-start; }
+.tl-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+  box-shadow: 0 0 8px currentColor;
+}
+.tl-time { font-size: .7rem; color: var(--muted); font-family: var(--mono); white-space: nowrap; min-width: 50px; }
+.tl-text { font-size: .8rem; line-height: 1.4; }
+
+/* ============================================================
+   SCREEN 3 — TRANSCRIPT
+   ============================================================ */
+#page-transcript { flex-direction: row; }
+
+.transcript-grid {
+  display: grid; grid-template-columns: 1fr 340px; gap: 20px;
+}
+.transcript-feed {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px; max-height: 480px; overflow-y: auto;
+}
+.transcript-line { display: flex; gap: 12px; margin-bottom: 16px; animation: fadeInUp .4s ease; }
+.speaker-tag {
+  padding: 3px 10px; border-radius: 20px; font-size: .68rem;
+  font-weight: 700; letter-spacing: .05em; flex-shrink: 0; align-self: flex-start;
+  margin-top: 2px;
+}
+.sp-a { background: rgba(0,240,255,.15); color: var(--primary); border: 1px solid rgba(0,240,255,.3); }
+.sp-b { background: rgba(123,97,255,.15); color: var(--secondary); border: 1px solid rgba(123,97,255,.3); }
+.sp-c { background: rgba(0,255,149,.15); color: var(--success); border: 1px solid rgba(0,255,149,.3); }
+.transcript-text { font-size: .85rem; line-height: 1.6; color: var(--text); }
+.transcript-text .cursor { display: inline-block; width: 2px; height: 14px; background: var(--primary); animation: blink 1s infinite; margin-left: 2px; vertical-align: middle; }
+
+.action-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.action-item:last-child { border: none; }
+.checkbox {
+  width: 16px; height: 16px; border-radius: 4px;
+  border: 1px solid var(--border); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .2s; flex-shrink: 0;
+}
+.checkbox.checked { background: var(--primary); border-color: var(--primary); color: #000; font-size: .6rem; }
+.action-item-text { font-size: .82rem; }
+.action-item-text.done { text-decoration: line-through; color: var(--muted); }
+
+.entity-tag {
+  display: inline-block; padding: 4px 12px; border-radius: 20px;
+  font-size: .72rem; font-weight: 600; margin: 4px;
+  background: rgba(123,97,255,.15); border: 1px solid rgba(123,97,255,.3);
+  color: var(--secondary); cursor: pointer; transition: all .2s;
+}
+.entity-tag:hover { background: rgba(123,97,255,.3); }
+
+/* ============================================================
+   SCREEN 4 — ARCHIVE
+   ============================================================ */
+#page-archive { flex-direction: row; }
+
+.filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+.filter-select {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; padding: 8px 14px; color: var(--text);
+  font-family: var(--font); font-size: .78rem; outline: none; cursor: pointer;
+}
+
+/* ============================================================
+   SCREEN 5 — SETTINGS
+   ============================================================ */
+#page-settings { flex-direction: row; }
+
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.profile-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; font-weight: 700; color: #000;
+  margin-bottom: 16px; box-shadow: 0 0 24px rgba(0,240,255,.3);
+  cursor: pointer; transition: box-shadow .25s;
+}
+.profile-avatar:hover { box-shadow: 0 0 40px rgba(0,240,255,.5); }
+
+.model-option {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--border); margin-bottom: 8px; transition: all .2s;
+}
+.model-option:hover { border-color: var(--primary); background: rgba(0,240,255,.04); }
+.model-option.selected { border-color: var(--primary); background: rgba(0,240,255,.08); }
+.model-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.model-name { font-size: .85rem; font-weight: 600; }
+.model-desc { font-size: .72rem; color: var(--muted); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1100px) {
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .transcript-grid { grid-template-columns: 1fr; }
+  .settings-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  :root { --sidebar-w: 0px; }
+  .sidebar { transform: translateX(-100%); --sidebar-w: 260px; }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  #hamburger { display: flex; }
+  .kpi-grid { grid-template-columns: repeat(2,1fr); }
+  .grid-4 { grid-template-columns: repeat(2,1fr); }
+  .grid-3 { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 2.4rem; }
+  .auth-container { flex-direction: column; align-items: center; }
+}
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .content { padding: 16px; }
+  .topbar { padding: 0 16px; }
+  .topbar-search { display: none; }
+}
+
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--success);
+  animation: glowPulse 1.5s infinite; display: inline-block; margin-right: 6px;
+}
+
+.progress-bar {
+  height: 4px; background: var(--surface2); border-radius: 2px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transition: width .5s ease;
+}
+
+.chart-container { position: relative; height: 200px; }
+
+/* Landing page top nav */
+.landing-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 40px;
+  background: rgba(7,17,31,.8); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.landing-nav .logo-text { font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em; }
+.landing-nav .logo-text em { color: var(--primary); font-style: normal; }
+.nav-links { display: flex; gap: 8px; }
+
+.objective-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: rgba(255,77,109,.06);
+  border: 1px solid rgba(255,77,109,.2); border-radius: 8px; margin-bottom: 6px;
+  font-size: .8rem;
+}
+.obj-icon { color: var(--danger); font-size: .9rem; }
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader"><div class="loader-ring"></div></div>
+
+<!-- TOASTS -->
+<div id="toast-container"></div>
+
+<!-- MODAL -->
+<div id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">New Session</h3>
+    <p id="modal-body">Your Cognitive AI session is initializing. All audio streams will be encrypted using quantum-resistant protocols before transmission.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="closeModal(); navigateTo('transcript'); showToast('Session started — Neural engine active','success')">Launch Session</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 1 — LANDING
+     ════════════════════════════════════════ -->
+<div id="page-landing" class="page active">
+  <canvas id="neural-canvas" style="position:fixed;inset:0;z-index:0;pointer-events:none;"></canvas>
+
+  <!-- Top nav -->
+  <nav class="landing-nav">
+    <div class="logo-text"><em>Cognitive</em> AI</div>
+    <div class="nav-links">
+      <button class="btn btn-ghost" style="font-size:.8rem;padding:7px 16px;" onclick="scrollTo(0,600)">Features</button>
+      <button class="btn btn-primary" style="font-size:.8rem;padding:7px 16px;" onclick="navigateTo('dashboard')">Dashboard</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero" style="margin-top:70px;">
+    <div class="hero-eyebrow"><span class="dot-pulse"></span>Executive Intelligence Suite v4.2</div>
+    <h1>The Future of<br><span class="gradient-text">Neural Intelligence</span></h1>
+    <p>End-to-end executive cognition — from live meeting synthesis to quantum-encrypted archives and autonomous workflows.</p>
+    <div class="hero-ctas">
+      <button class="btn btn-primary" style="padding:13px 28px;font-size:.9rem;" onclick="navigateTo('dashboard')">Enter Command Center</button>
+      <button class="btn btn-ghost" style="padding:13px 28px;font-size:.9rem;" onclick="openModal('Neural Demo','A live demonstration of Cognitive AI\'s neural processing engine is loading. Prepare for full cognitive augmentation.')">Watch Demo</button>
+    </div>
+  </div>
+
+  <!-- Orb -->
+  <div class="orb-container">
+    <div class="orb-main"></div>
+    <div class="orb-ring"></div>
+    <div class="orb-ring2"></div>
+  </div>
+
+  <!-- Auth cards -->
+  <div class="auth-container">
+    <!-- Login -->
+    <div class="auth-card">
+      <h2>Neural Access</h2>
+      <div class="sub">Sign in to your intelligence suite</div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" placeholder="exec@enterprise.ai">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Access Key</label>
+        <input class="form-input" type="password" placeholder="••••••••••••">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;font-size:.78rem;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--muted);">
+          <input type="checkbox" style="accent-color:var(--primary);">
+          Keep session active
+        </label>
+        <a href="#" style="color:var(--primary);text-decoration:none;">Recover access</a>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:12px;" onclick="navigateTo('dashboard'); showToast('Welcome back, Executive','success')">Authenticate →</button>
+      <div class="divider">or continue with</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" style="flex:1;font-size:.78rem;" onclick="navigateTo('dashboard')">🔐 SSO</button>
+        <button class="btn btn-ghost" style="flex:1;font-size:.78rem;" onclick="navigateTo('dashboard')">🔑 Passkey</button>
+      </div>
+    </div>
+
+    <!-- Signup -->
+    <div class="auth-card" style="animation-delay:.15s;">
+      <h2>Request Access</h2>
+      <div class="sub">Enterprise onboarding portal</div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" placeholder="Alexandra Chen">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Organization</label>
+        <input class="form-input" type="text" placeholder="Nexus Capital Group">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Corporate Email</label>
+        <input class="form-input" type="email" placeholder="a.chen@nexuscapital.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Create Access Key</label>
+        <input class="form-input" type="password" placeholder="Min. 16 characters">
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:12px;" onclick="navigateTo('dashboard'); showToast('Access granted — Neural engine initializing','success')">Initialize Suite →</button>
+    </div>
+  </div>
+
+  <!-- Feature cards -->
+  <div class="features-row">
+    <div class="feature-card">
+      <div class="feature-icon fi-1">⚡</div>
+      <h4>Real-time Synthesis</h4>
+      <p>12ms neural processing latency across all cognitive streams.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-2">🔐</div>
+      <h4>Quantum Encryption</h4>
+      <p>Post-quantum cryptographic protocols protecting every session.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-3">🤖</div>
+      <h4>Autonomous Workflows</h4>
+      <p>AI-driven action items and decision intelligence at scale.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 2 — DASHBOARD
+     ════════════════════════════════════════ -->
+<div id="page-dashboard" class="page">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar-dash">
+    <div class="sidebar-logo">
+      <div class="orb" style="width:34px;height:34px;font-size:.7rem;">CA</div>
+      <span><em>Cognitive</em> AI</span>
+    </div>
+    <div class="nav-section">Command</div>
+    <div class="nav-item active" onclick="navigateTo('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Command Center
+    </div>
+    <div class="nav-item" onclick="navigateTo('transcript')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      Live Transcript
+    </div>
+    <div class="nav-item" onclick="navigateTo('archive')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      Cognitive Archive
+    </div>
+    <div class="nav-section" style="margin-top:16px;">Configuration</div>
+    <div class="nav-item" onclick="navigateTo('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Core Parameters
+    </div>
+    <div class="sidebar-bottom">
+      <div class="user-card">
+        <div class="avatar">AC</div>
+        <div class="user-info">
+          <div class="name">Alexandra Chen</div>
+          <div class="role">Chief Intelligence Officer</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <button id="hamburger" onclick="toggleSidebar('sidebar-dash')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title">Command Center</div>
+      <div class="topbar-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search sessions…">
+      </div>
+      <span class="badge badge-success" style="margin-left:4px;"><span class="live-dot"></span>Neural Active</span>
+      <div class="avatar" style="width:32px;height:32px;font-size:.7rem;margin-left:8px;cursor:pointer;">AC</div>
+    </div>
+
+    <div class="content">
+      <!-- KPI -->
+      <div class="kpi-grid">
+        <div class="kpi-card" style="border-color:rgba(0,240,255,.2);">
+          <div class="kpi-label">Processing Latency</div>
+          <div class="kpi-value"><span id="kpi1">12</span><span class="kpi-unit"> ms</span></div>
+          <div class="kpi-sub">↓ 3ms from baseline</div>
+        </div>
+        <div class="kpi-card" style="border-color:rgba(123,97,255,.2);">
+          <div class="kpi-label">Token Efficiency</div>
+          <div class="kpi-value"><span id="kpi2">99.2</span><span class="kpi-unit">%</span></div>
+          <div class="kpi-sub">↑ 1.4% this week</div>
+        </div>
+        <div class="kpi-card" style="border-color:rgba(0,255,149,.2);">
+          <div class="kpi-label">Secure Streams</div>
+          <div class="kpi-value"><span id="kpi3">8</span><span class="kpi-unit"> active</span></div>
+          <div class="kpi-sub">All channels encrypted</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Archived Sessions</div>
+          <div class="kpi-value"><span id="kpi4">128</span></div>
+          <div class="kpi-sub">+14 this month</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:20px;">
+        <!-- Live Spectrum -->
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">Live Audio Spectrum</div>
+            <span class="badge badge-success"><span class="live-dot"></span>Streaming</span>
+          </div>
+          <div class="spectrum-bar" id="spectrum"></div>
+          <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:8px;">
+            <span>80Hz</span><span>500Hz</span><span>2kHz</span><span>8kHz</span><span>20kHz</span>
+          </div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" style="width:100%;" onclick="openModal('New Cognitive Session','Your Cognitive AI session is initializing. All audio streams will be encrypted using quantum-resistant protocols.')">
+              ⚡ Start New Session
+            </button>
+          </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="card">
+          <div class="section-title" style="margin-bottom:16px;">Activity Timeline</div>
+          <div class="timeline" id="timeline"></div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="section-header">
+          <div class="section-title">Processing Efficiency</div>
+          <span class="badge badge-info">Last 7 days</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="dashChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Sessions -->
+      <div class="card">
+        <div class="section-header">
+          <div class="section-title">Recent Sessions</div>
+          <button class="btn btn-ghost" style="font-size:.78rem;padding:6px 14px;" onclick="navigateTo('archive')">View All</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Session Title</th>
+                <th>Duration</th>
+                <th>Participants</th>
+                <th>Sentiment</th>
+                <th>Keywords</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="dash-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 3 — TRANSCRIPT
+     ════════════════════════════════════════ -->
+<div id="page-transcript" class="page">
+  <aside class="sidebar" id="sidebar-transcript">
+    <div class="sidebar-logo">
+      <div class="orb" style="width:34px;height:34px;font-size:.7rem;">CA</div>
+      <span><em>Cognitive</em> AI</span>
+    </div>
+    <div class="nav-section">Command</div>
+    <div class="nav-item" onclick="navigateTo('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Command Center
+    </div>
+    <div class="nav-item active" onclick="navigateTo('transcript')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      Live Transcript
+    </div>
+    <div class="nav-item" onclick="navigateTo('archive')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      Cognitive Archive
+    </div>
+    <div class="nav-section" style="margin-top:16px;">Configuration</div>
+    <div class="nav-item" onclick="navigateTo('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Core Parameters
+    </div>
+    <div class="sidebar-bottom">
+      <div class="user-card">
+        <div class="avatar">AC</div>
+        <div class="user-info">
+          <div class="name">Alexandra Chen</div>
+          <div class="role">Chief Intelligence Officer</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="hamburger-btn" style="display:none;background:none;border:none;cursor:pointer;color:var(--text);" onclick="toggleSidebar('sidebar-transcript')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="topbar-title">Live Intelligence — CEO Strategy Sync</div>
+      <span class="badge badge-danger" style="margin-left:auto;"><span class="live-dot" style="background:var(--danger);"></span>REC 00:24:17</span>
+      <button class="btn btn-ghost" style="font-size:.78rem;padding:6px 14px;margin-left:8px;" onclick="showToast('Transcript exported — PDF ready','success')">Export</button>
+    </div>
+
+    <div class="content">
+      <div class="transcript-grid">
+        <!-- Left col -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <!-- Live feed -->
+          <div class="card">
+            <div class="section-header">
+              <div class="section-title">Live Neural Transcript</div>
+              <span class="badge badge-success"><span class="live-dot"></span>Streaming</span>
+            </div>
+            <div class="transcript-feed" id="transcript-feed"></div>
+          </div>
+
+          <!-- Summary -->
+          <div class="card">
+            <div class="section-title" style="margin-bottom:12px;">Neural Summary</div>
+            <p style="font-size:.85rem;color:var(--muted);line-height:1.7;" id="summary-text">
+              The executive team reviewed Q4 financial projections against board expectations. Revenue forecasts show a 23% YoY growth trajectory, contingent on Series B close by November. Hiring pipeline was assessed with 3 critical engineering roles identified. Product roadmap reprioritization proposed for Q1 following competitive intelligence report.
+            </p>
+          </div>
+
+          <!-- Detected entities -->
+          <div class="card">
+            <div class="section-title" style="margin-bottom:12px;">Detected Entities</div>
+            <div id="entity-tags">
+              <span class="entity-tag">💰 Budget</span>
+              <span class="entity-tag">🚀 Q4 Launch</span>
+              <span class="entity-tag">👥 Hiring</span>
+              <span class="entity-tag">📈 Revenue</span>
+              <span class="entity-tag">🔬 Series B</span>
+              <span class="entity-tag">🗓 Q1 2025</span>
+              <span class="entity-tag">🏢 Board</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right col -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <!-- Sentiment donut -->
+          <div class="card">
+            <div class="section-title" style="margin-bottom:12px;">Sentiment Analysis</div>
+            <div class="chart-container" style="height:160px;">
+              <canvas id="sentimentChart"></canvas>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:.72rem;">
+              <span style="color:var(--success);">● Positive 58%</span>
+              <span style="color:var(--warning);">● Neutral 28%</span>
+              <span style="color:var(--danger);">● Critical 14%</span>
+            </div>
+          </div>
+
+          <!-- Action items -->
+          <div class="card">
+            <div class="section-title" style="margin-bottom:12px;">Action Items</div>
+            <div id="action-items"></div>
+          </div>
+
+          <!-- Critical objectives -->
+          <div class="card">
+            <div class="section-title" style="margin-bottom:12px;">Critical Objectives</div>
+            <div>
+              <div class="objective-item"><span class="obj-icon">⚠</span><span style="font-size:.8rem;">Close Series B by Nov 15</span></div>
+              <div class="objective-item"><span class="obj-icon">⚠</span><span style="font-size:.8rem;">Ship v2.4 before Q4 board review</span></div>
+              <div class="objective-item"><span class="obj-icon">⚠</span><span style="font-size:.8rem;">Hire 3 senior ML engineers</span></div>
+            </div>
+          </div>
+
+          <!-- Spectrum mini -->
+          <div class="card">
+            <div class="section-title" style="margin-bottom:10px;">Voice Activity</div>
+            <div style="display:flex;flex-direction:column;gap:6px;" id="voice-bars"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 4 — ARCHIVE
+     ════════════════════════════════════════ -->
+<div id="page-archive" class="page">
+  <aside class="sidebar" id="sidebar-archive">
+    <div class="sidebar-logo">
+      <div class="orb" style="width:34px;height:34px;font-size:.7rem;">CA</div>
+      <span><em>Cognitive</em> AI</span>
+    </div>
+    <div class="nav-section">Command</div>
+    <div class="nav-item" onclick="navigateTo('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Command Center
+    </div>
+    <div class="nav-item" onclick="navigateTo('transcript')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      Live Transcript
+    </div>
+    <div class="nav-item active" onclick="navigateTo('archive')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      Cognitive Archive
+    </div>
+    <div class="nav-section" style="margin-top:16px;">Configuration</div>
+    <div class="nav-item" onclick="navigateTo('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Core Parameters
+    </div>
+    <div class="sidebar-bottom">
+      <div class="user-card">
+        <div class="avatar">AC</div>
+        <div class="user-info">
+          <div class="name">Alexandra Chen</div>
+          <div class="role">Chief Intelligence Officer</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Cognitive Repository</div>
+      <div class="topbar-search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search archive…" oninput="filterArchive(this.value)">
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Stats -->
+      <div class="grid-3" style="margin-bottom:20px;">
+        <div class="card" style="text-align:center;">
+          <div class="card-title">Total Sessions</div>
+          <div class="card-value" style="color:var(--primary);">128</div>
+          <div class="card-delta">+14 this month</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div class="card-title">Data Processed</div>
+          <div class="card-value" style="color:var(--secondary);">12.4 <span>GB</span></div>
+          <div class="card-delta">Across all sessions</div>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div class="card-title">Keywords Indexed</div>
+          <div class="card-value" style="color:var(--success);">2,482</div>
+          <div class="card-delta">Neural taxonomy</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-row">
+        <select class="filter-select" onchange="filterArchive()">
+          <option>All Projects</option>
+          <option>Strategy</option>
+          <option>Investor</option>
+          <option>Product</option>
+          <option>Operations</option>
+        </select>
+        <select class="filter-select" onchange="filterArchive()">
+          <option>All Participants</option>
+          <option>Executive Team</option>
+          <option>Board</option>
+          <option>Engineering</option>
+        </select>
+        <select class="filter-select" onchange="filterArchive()">
+          <option>Any Date</option>
+          <option>Last 7 days</option>
+          <option>Last 30 days</option>
+          <option>Last Quarter</option>
+        </select>
+        <button class="btn btn-ghost" style="font-size:.78rem;padding:7px 14px;" onclick="showToast('Filters applied','success')">Apply</button>
+        <button class="btn btn-primary" style="font-size:.78rem;padding:7px 14px;margin-left:auto;" onclick="showToast('Generating report…','success')">⬇ Export All</button>
+      </div>
+
+      <!-- Table -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Session Title</th>
+                <th>Date</th>
+                <th>Duration</th>
+                <th>Participants</th>
+                <th>Sentiment</th>
+                <th>Key Topics</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="archive-table"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination">
+        <button class="page-btn" onclick="showToast('Page 1 active','')">‹</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn" onclick="setPagination(this)">2</button>
+        <button class="page-btn" onclick="setPagination(this)">3</button>
+        <button class="page-btn" onclick="setPagination(this)">4</button>
+        <button class="page-btn" onclick="showToast('Loading next page…','')">›</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 5 — SETTINGS
+     ════════════════════════════════════════ -->
+<div id="page-settings" class="page">
+  <aside class="sidebar" id="sidebar-settings">
+    <div class="sidebar-logo">
+      <div class="orb" style="width:34px;height:34px;font-size:.7rem;">CA</div>
+      <span><em>Cognitive</em> AI</span>
+    </div>
+    <div class="nav-section">Command</div>
+    <div class="nav-item" onclick="navigateTo('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Command Center
+    </div>
+    <div class="nav-item" onclick="navigateTo('transcript')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      Live Transcript
+    </div>
+    <div class="nav-item" onclick="navigateTo('archive')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      Cognitive Archive
+    </div>
+    <div class="nav-section" style="margin-top:16px;">Configuration</div>
+    <div class="nav-item active" onclick="navigateTo('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      Core Parameters
+    </div>
+    <div class="sidebar-bottom">
+      <div class="user-card">
+        <div class="avatar">AC</div>
+        <div class="user-info">
+          <div class="name">Alexandra Chen</div>
+          <div class="role">Chief Intelligence Officer</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Core Parameters</div>
+      <button class="btn btn-primary" style="font-size:.8rem;padding:8px 20px;margin-left:auto;" onclick="showToast('Configuration saved successfully','success')">Save Parameters</button>
+    </div>
+
+    <div class="content">
+      <div class="settings-grid">
+        <!-- Profile -->
+        <div class="card">
+          <div class="section-title" style="margin-bottom:20px;">Executive Profile</div>
+          <div class="profile-avatar" onclick="showToast('Avatar upload interface launching…','')">AC</div>
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input class="form-input" value="Alexandra Chen">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input class="form-input" value="Chief Intelligence Officer">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Organization</label>
+            <input class="form-input" value="Nexus Capital Group">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Corporate Email</label>
+            <input class="form-input" type="email" value="a.chen@nexuscapital.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Encryption Tier</label>
+            <select class="form-select">
+              <option>Quantum-256 (Recommended)</option>
+              <option>AES-512 Enterprise</option>
+              <option>Military Grade XOR</option>
+              <option>Post-Quantum Lattice</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- AI Model -->
+        <div class="card">
+          <div class="section-title" style="margin-bottom:16px;">Neural Engine Selection</div>
+          <div class="model-option selected" onclick="selectModel(this)">
+            <div class="model-dot" style="background:var(--primary);box-shadow:0 0 8px var(--primary);"></div>
+            <div>
+              <div class="model-name">Claude Neural</div>
+              <div class="model-desc">Anthropic · Constitutional AI · 200K context</div>
+            </div>
+            <span class="badge badge-info" style="margin-left:auto;">Active</span>
+          </div>
+          <div class="model-option" onclick="selectModel(this)">
+            <div class="model-dot" style="background:#74aa9c;"></div>
+            <div>
+              <div class="model-name">GPT Enterprise</div>
+              <div class="model-desc">OpenAI · o3 · 128K context</div>
+            </div>
+          </div>
+          <div class="model-option" onclick="selectModel(this)">
+            <div class="model-dot" style="background:#4285f4;"></div>
+            <div>
+              <div class="model-name">Gemini Ops</div>
+              <div class="model-desc">Google DeepMind · Ultra 1.5 · 1M context</div>
+            </div>
+          </div>
+
+          <div class="section-title" style="margin:20px 0 14px;">Voice Tuning</div>
+          <div class="slider-row">
+            <div class="slider-label">Sensitivity <span id="sl1-val">72%</span></div>
+            <input type="range" min="0" max="100" value="72" oninput="document.getElementById('sl1-val').textContent=this.value+'%'">
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">Noise Cancellation <span id="sl2-val">85%</span></div>
+            <input type="range" min="0" max="100" value="85" oninput="document.getElementById('sl2-val').textContent=this.value+'%'">
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">Speaker Separation <span id="sl3-val">90%</span></div>
+            <input type="range" min="0" max="100" value="90" oninput="document.getElementById('sl3-val').textContent=this.value+'%'">
+          </div>
+          <div class="slider-row">
+            <div class="slider-label">Confidence Threshold <span id="sl4-val">65%</span></div>
+            <input type="range" min="0" max="100" value="65" oninput="document.getElementById('sl4-val').textContent=this.value+'%'">
+          </div>
+        </div>
+
+        <!-- Integrations -->
+        <div class="card">
+          <div class="section-title" style="margin-bottom:16px;">Neural Integrations</div>
+          <div id="integrations-list">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="label">🔔 Slack</div>
+                <div class="desc">Auto-post summaries to channels</div>
+              </div>
+              <div class="toggle on" onclick="this.classList.toggle('on');showToast('Slack integration updated','success')"></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="label">⌥ GitHub</div>
+                <div class="desc">Sync action items as issues</div>
+              </div>
+              <div class="toggle" onclick="this.classList.toggle('on');showToast('GitHub integration updated','success')"></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="label">📝 Notion</div>
+                <div class="desc">Export transcripts to workspace</div>
+              </div>
+              <div class="toggle on" onclick="this.classList.toggle('on');showToast('Notion integration updated','success')"></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="label">📅 Calendar</div>
+                <div class="desc">Auto-schedule follow-ups</div>
+              </div>
+              <div class="toggle" onclick="this.classList.toggle('on');showToast('Calendar integration updated','success')"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Webhook + Theme -->
+        <div class="card">
+          <div class="section-title" style="margin-bottom:16px;">Webhook Configuration</div>
+          <div class="form-group">
+            <label class="form-label">Outbound Webhook URL</label>
+            <input class="form-input" placeholder="https://hooks.enterprise.ai/v1/cognitive/">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Secret Token</label>
+            <input class="form-input" type="password" placeholder="whsec_••••••••••••••••">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Event Triggers</label>
+            <select class="form-select">
+              <option>All Events</option>
+              <option>Session Complete</option>
+              <option>Action Item Created</option>
+              <option>Critical Alert Only</option>
+            </select>
+          </div>
+          <button class="btn btn-ghost" style="width:100%;margin-bottom:20px;" onclick="showToast('Webhook test sent — 200 OK','success')">Test Webhook</button>
+
+          <div class="section-title" style="margin-bottom:14px;">Interface Theme</div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="label">Dark Neural Mode</div>
+              <div class="desc">Optimal for extended cognitive sessions</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="label">Motion Effects</div>
+              <div class="desc">Animations and transitions</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div class="toggle-info">
+              <div class="label">Compact Density</div>
+              <div class="desc">Higher information density</div>
+            </div>
+            <div class="toggle" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Danger zone -->
+      <div class="card" style="margin-top:20px;border-color:rgba(255,77,109,.2);">
+        <div class="section-title" style="color:var(--danger);margin-bottom:12px;">⚠ Danger Zone</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <button class="btn btn-danger" onclick="openModal('Purge Archive','This will permanently delete all 128 archived sessions and 12.4 GB of processed data. This action cannot be undone.')">Purge Archive</button>
+          <button class="btn btn-danger" onclick="openModal('Reset Neural Engine','All model configurations, voice tuning parameters, and integration tokens will be reset to factory defaults.')">Reset Neural Engine</button>
+          <button class="btn btn-danger" onclick="openModal('Terminate Account','Your Cognitive AI executive account will be permanently deleted. All data will be securely wiped within 24 hours.')">Terminate Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════
+const meetings = [
+  { title: "CEO Strategy Sync", date: "2024-10-28", duration: "1h 24m", participants: 4, sentiment: "positive", keywords: ["Revenue","Q4","Strategy"], project: "Strategy" },
+  { title: "Investor Review", date: "2024-10-25", duration: "58m", participants: 6, sentiment: "neutral", keywords: ["Series B","Valuation","Cap Table"], project: "Investor" },
+  { title: "Product Planning Q1", date: "2024-10-22", duration: "2h 10m", participants: 8, sentiment: "positive", keywords: ["Roadmap","Sprint","Launch"], project: "Product" },
+  { title: "Board Pre-read Session", date: "2024-10-18", duration: "45m", participants: 3, sentiment: "critical", keywords: ["Risk","Compliance","Audit"], project: "Strategy" },
+  { title: "Engineering Standup", date: "2024-10-17", duration: "22m", participants: 12, sentiment: "positive", keywords: ["Deployment","CI/CD","Bugs"], project: "Operations" },
+  { title: "GTM Strategy Review", date: "2024-10-15", duration: "1h 35m", participants: 5, sentiment: "neutral", keywords: ["Pipeline","ARR","Churn"], project: "Strategy" },
+  { title: "Hiring Committee", date: "2024-10-12", duration: "1h 02m", participants: 4, sentiment: "positive", keywords: ["ML Engineers","Culture","Offer"], project: "Operations" },
+  { title: "Legal & Compliance", date: "2024-10-10", duration: "48m", participants: 3, sentiment: "critical", keywords: ["GDPR","SOC2","Contract"], project: "Operations" },
+];
+
+const transcriptLines = [
+  { speaker: "A", name: "Alexandra", text: "Let's begin with Q4 projections. The board is expecting 23% growth YoY — I need everyone aligned on the path to get there." },
+  { speaker: "B", name: "Marcus", text: "We're tracking at 19% right now. The gap closes if we close two enterprise accounts in November — Sigma Corp and Atlas Group are both at final procurement." },
+  { speaker: "C", name: "Jordan", text: "Product velocity is the constraint. We need the v2.4 release to land before the board review or we're showing up with an incomplete story." },
+  { speaker: "A", name: "Alexandra", text: "Agreed. Jordan, what's blocking v2.4? I saw the sprint review and there were three P0 items still open." },
+  { speaker: "C", name: "Jordan", text: "The neural pipeline integration is the blocker. We need two more senior ML engineers — I've been saying this for six weeks." },
+  { speaker: "B", name: "Marcus", text: "Series B close gives us the headcount budget. We're in final term sheet negotiations — I'm confident we close by November 15." },
+  { speaker: "A", name: "Alexandra", text: "Put November 10 as the internal deadline. We cannot be constrained by external timelines. What's the contingency if the close slips?" },
+  { speaker: "C", name: "Jordan", text: "We scope down v2.4 — ship the core features, defer the advanced sentiment clustering to v2.5. It buys us two weeks." },
+];
+
+const actions = [
+  { text: "Close Series B term sheet — Marcus Chen", done: false },
+  { text: "Finalize v2.4 scope with engineering — Jordan", done: false },
+  { text: "Post 3 senior ML engineer JDs by Monday", done: false },
+  { text: "Prepare board pre-read deck — Alexandra", done: true },
+  { text: "Schedule Sigma Corp final call — Marcus", done: true },
+];
+
+const timeline = [
+  { time: "09:42", text: "Session initiated — CEO Strategy Sync", color: "var(--primary)" },
+  { time: "10:14", text: "Q4 revenue targets confirmed at $8.4M", color: "var(--success)" },
+  { time: "10:31", text: "Critical: Series B close deadline set", color: "var(--danger)" },
+  { time: "10:48", text: "3 engineering hires approved for Q4", color: "var(--secondary)" },
+  { time: "11:06", text: "v2.4 scope reduced — contingency activated", color: "var(--warning)" },
+];
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function navigateTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + page);
+  if (target) {
+    target.classList.add('active');
+    window.scrollTo(0, 0);
+  }
+  if (page === 'transcript') initTranscript();
+  if (page === 'dashboard') initDashboard();
+  if (page === 'archive') initArchive();
+}
+
+// ══════════════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════════════
+function toggleSidebar(id) {
+  const sb = document.getElementById(id);
+  if (sb) sb.classList.toggle('open');
+}
+
+// ══════════════════════════════════════════
+// TOASTS
+// ══════════════════════════════════════════
+function showToast(msg, type = '') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ══════════════════════════════════════════
+// MODAL
+// ══════════════════════════════════════════
+function openModal(title, body) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').textContent = body;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+document.getElementById('modal-overlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ══════════════════════════════════════════
+// NEURAL CANVAS (landing)
+// ══════════════════════════════════════════
+function initNeuralCanvas() {
+  const canvas = document.getElementById('neural-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  for (let i = 0; i < 60; i++) {
+    nodes.push({
+      x: Math.random() * W, y: Math.random() * H,
+      vx: (Math.random() - .5) * .4, vy: (Math.random() - .5) * .4,
+      r: Math.random() * 2 + 1
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy;
+      if (n.x < 0 || n.x > W) n.vx *= -1;
+      if (n.y < 0 || n.y > H) n.vy *= -1;
+    });
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.strokeStyle = `rgba(0,240,255,${(1 - dist / 150) * 0.15})`;
+          ctx.lineWidth = .5;
+          ctx.stroke();
+        }
+      }
+      ctx.beginPath();
+      ctx.arc(nodes[i].x, nodes[i].y, nodes[i].r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,240,255,0.4)';
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+// ══════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════
+let dashChartInstance = null;
+function initDashboard() {
+  // Spectrum
+  const spec = document.getElementById('spectrum');
+  if (spec && !spec.dataset.init) {
+    spec.dataset.init = 1;
+    const heights = [20,35,55,40,65,80,45,30,70,55,40,60,75,50,35,80,65,45,55,30,70,40,60,50,35];
+    heights.forEach(h => {
+      const b = document.createElement('div');
+      b.className = 'spec-bar';
+      b.style.height = h + '%';
+      spec.appendChild(b);
+    });
+    setInterval(() => {
+      spec.querySelectorAll('.spec-bar').forEach(b => {
+        b.style.height = (Math.random() * 85 + 10) + '%';
+      });
+    }, 600);
+  }
+
+  // Timeline
+  const tl = document.getElementById('timeline');
+  if (tl && !tl.dataset.init) {
+    tl.dataset.init = 1;
+    timeline.forEach(item => {
+      tl.innerHTML += `<div class="timeline-item">
+        <div class="tl-dot" style="background:${item.color};color:${item.color};"></div>
+        <span class="tl-time">${item.time}</span>
+        <span class="tl-text">${item.text}</span>
+      </div>`;
+    });
+  }
+
+  // Table
+  const dt = document.getElementById('dash-table');
+  if (dt && !dt.dataset.init) {
+    dt.dataset.init = 1;
+    meetings.slice(0, 5).forEach(m => {
+      const sc = m.sentiment === 'positive' ? 'badge-success' : m.sentiment === 'neutral' ? 'badge-warning' : 'badge-danger';
+      dt.innerHTML += `<tr>
+        <td style="font-weight:600;">${m.title}</td>
+        <td style="color:var(--muted);">${m.duration}</td>
+        <td style="color:var(--muted);">${m.participants} people</td>
+        <td><span class="badge ${sc}">${m.sentiment}</span></td>
+        <td style="color:var(--muted);font-size:.75rem;">${m.keywords.join(', ')}</td>
+        <td><button class="btn btn-ghost" style="font-size:.72rem;padding:4px 10px;" onclick="navigateTo('transcript');showToast('Loading session…','')">View</button></td>
+      </tr>`;
+    });
+  }
+
+  // Chart
+  setTimeout(() => {
+    const canvas = document.getElementById('dashChart');
+    if (!canvas) return;
+    if (dashChartInstance) { dashChartInstance.destroy(); dashChartInstance = null; }
+    const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const data = [94.2, 96.8, 95.1, 98.4, 97.6, 99.2, 98.8];
+    dashChartInstance = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Efficiency %',
+          data,
+          borderColor: '#00f0ff',
+          backgroundColor: 'rgba(0,240,255,0.06)',
+          fill: true,
+          tension: .4,
+          pointBackgroundColor: '#00f0ff',
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#9fb3c8', font: { family: 'Syne', size: 11 } } },
+          y: { grid: { color: 'rgba(255,255,255,.05)' }, ticks: { color: '#9fb3c8', font: { family: 'Syne', size: 11 } }, min: 90, max: 100 }
+        }
+      }
+    });
+  }, 100);
+}
+
+// ══════════════════════════════════════════
+// TRANSCRIPT
+// ══════════════════════════════════════════
+let transcriptIdx = 0, transcriptTimer = null;
+let sentimentChartInstance = null;
+
+function initTranscript() {
+  const feed = document.getElementById('transcript-feed');
+  if (!feed) return;
+  feed.innerHTML = '';
+  transcriptIdx = 0;
+  if (transcriptTimer) clearInterval(transcriptTimer);
+
+  const classMap = { A: 'sp-a', B: 'sp-b', C: 'sp-c' };
+
+  function addLine() {
+    if (transcriptIdx >= transcriptLines.length) {
+      transcriptIdx = 0;
+      feed.innerHTML = '';
+    }
+    const line = transcriptLines[transcriptIdx++];
+    const div = document.createElement('div');
+    div.className = 'transcript-line';
+    div.innerHTML = `
+      <span class="speaker-tag ${classMap[line.speaker]}">${line.name}</span>
+      <span class="transcript-text">${line.text}<span class="cursor"></span></span>`;
+    feed.appendChild(div);
+    feed.scrollTop = feed.scrollHeight;
+    setTimeout(() => {
+      div.querySelector('.cursor')?.remove();
+    }, 1800);
+  }
+  addLine();
+  transcriptTimer = setInterval(addLine, 2400);
+
+  // Action items
+  const al = document.getElementById('action-items');
+  if (al && !al.dataset.init) {
+    al.dataset.init = 1;
+    actions.forEach((a, i) => {
+      const div = document.createElement('div');
+      div.className = 'action-item';
+      div.innerHTML = `
+        <div class="checkbox ${a.done ? 'checked' : ''}" onclick="toggleCheck(this, ${i})">
+          ${a.done ? '✓' : ''}
+        </div>
+        <span class="action-item-text ${a.done ? 'done' : ''}">${a.text}</span>`;
+      al.appendChild(div);
+    });
+  }
+
+  // Voice bars
+  const vb = document.getElementById('voice-bars');
+  if (vb && !vb.dataset.init) {
+    vb.dataset.init = 1;
+    ['Alexandra (A)', 'Marcus (B)', 'Jordan (C)'].forEach((name, i) => {
+      const colors = ['var(--primary)', 'var(--secondary)', 'var(--success)'];
+      vb.innerHTML += `<div>
+        <div style="display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:4px;">
+          <span>${name}</span><span style="color:${colors[i]};">${[42, 31, 27][i]}%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${[42,31,27][i]}%;background:${colors[i]};"></div></div>
+      </div>`;
+    });
+  }
+
+  // Sentiment chart
+  setTimeout(() => {
+    const canvas = document.getElementById('sentimentChart');
+    if (!canvas) return;
+    if (sentimentChartInstance) { sentimentChartInstance.destroy(); sentimentChartInstance = null; }
+    sentimentChartInstance = new Chart(canvas, {
+      type: 'doughnut',
+      data: {
+        labels: ['Positive', 'Neutral', 'Critical'],
+        datasets: [{
+          data: [58, 28, 14],
+          backgroundColor: ['rgba(0,255,149,.7)', 'rgba(255,184,0,.7)', 'rgba(255,77,109,.7)'],
+          borderColor: 'transparent',
+          borderWidth: 0,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '72%',
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}%` } }
+        }
+      }
+    });
+  }, 100);
+}
+
+function toggleCheck(el, idx) {
+  const done = !el.classList.contains('checked');
+  el.classList.toggle('checked');
+  el.textContent = done ? '✓' : '';
+  const text = el.nextElementSibling;
+  if (text) text.classList.toggle('done', done);
+  showToast(done ? 'Action item completed' : 'Action item reopened', done ? 'success' : '');
+}
+
+// ══════════════════════════════════════════
+// ARCHIVE
+// ══════════════════════════════════════════
+function initArchive() {
+  const tbody = document.getElementById('archive-table');
+  if (!tbody || tbody.dataset.init) return;
+  tbody.dataset.init = 1;
+  renderArchiveRows(meetings);
+}
+
+function renderArchiveRows(data) {
+  const tbody = document.getElementById('archive-table');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  data.forEach(m => {
+    const sc = m.sentiment === 'positive' ? 'badge-success' : m.sentiment === 'neutral' ? 'badge-warning' : 'badge-danger';
+    tbody.innerHTML += `<tr>
+      <td style="font-weight:600;">${m.title}</td>
+      <td style="color:var(--muted);font-size:.78rem;">${m.date}</td>
+      <td style="color:var(--muted);">${m.duration}</td>
+      <td style="color:var(--muted);">${m.participants}</td>
+      <td><span class="badge ${sc}">${m.sentiment}</span></td>
+      <td style="color:var(--muted);font-size:.75rem;">${m.keywords.join(', ')}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn btn-ghost" style="font-size:.7rem;padding:4px 8px;" onclick="navigateTo('transcript');showToast('Loading session…','')">View</button>
+        <button class="btn btn-ghost" style="font-size:.7rem;padding:4px 8px;" onclick="showToast('Downloading report…','success')">⬇</button>
+      </td>
+    </tr>`;
+  });
+}
+
+function filterArchive(q) {
+  if (!q) { renderArchiveRows(meetings); return; }
+  const filtered = meetings.filter(m =>
+    m.title.toLowerCase().includes(q.toLowerCase()) ||
+    m.keywords.some(k => k.toLowerCase().includes(q.toLowerCase()))
+  );
+  renderArchiveRows(filtered);
+}
+
+function setPagination(btn) {
+  document.querySelectorAll('.page-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  showToast('Loading page ' + btn.textContent, '');
+}
+
+// ══════════════════════════════════════════
+// MODEL SELECT
+// ══════════════════════════════════════════
+function selectModel(el) {
+  document.querySelectorAll('.model-option').forEach(m => {
+    m.classList.remove('selected');
+    const badge = m.querySelector('.badge');
+    if (badge) badge.remove();
+  });
+  el.classList.add('selected');
+  const badge = document.createElement('span');
+  badge.className = 'badge badge-info';
+  badge.style.marginLeft = 'auto';
+  badge.textContent = 'Active';
+  el.appendChild(badge);
+  showToast('Neural engine updated: ' + el.querySelector('.model-name').textContent, 'success');
+}
+
+// ══════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════
+window.addEventListener('load', () => {
+  initNeuralCanvas();
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hidden');
+  }, 1200);
+});
+</script>
+</body>
+</html>
