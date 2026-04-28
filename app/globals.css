@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Syne", sans-serif;
+  --font-mono: "DM Mono", monospace;
+  
+  --color-background: #07111f;
+  --color-background-secondary: #0b1929;
+  --color-foreground: #ffffff;
+  --color-muted: #9fb3c8;
+  --color-muted-foreground: #9fb3c8;
+  
+  --color-surface: rgba(255, 255, 255, 0.05);
+  --color-surface-hover: rgba(255, 255, 255, 0.09);
+  
+  --color-border: rgba(0, 240, 255, 0.15);
+  
+  --color-primary: #00f0ff;
+  --color-primary-foreground: #000000;
+  
+  --color-secondary: #7b61ff;
+  --color-secondary-foreground: #ffffff;
+  
+  --color-success: #00ff95;
+  --color-success-foreground: #000000;
+  
+  --color-danger: #ff4d6d;
+  --color-danger-foreground: #ffffff;
+  
+  --color-warning: #ffb800;
+  --color-warning-foreground: #000000;
+  
+  --color-card: rgba(255, 255, 255, 0.05);
+  --color-card-foreground: #ffffff;
+  
+  --radius: 0.75rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--color-background);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+  
+  .glass {
+    @apply bg-surface backdrop-blur-xl border border-border;
+  }
+  
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+  }
+  
+  .glow-primary-hover:hover {
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.5);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 45px rgba(0, 240, 255, 0.7);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes orb-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes wave-move {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.2);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-orb-rotate {
+  animation: orb-rotate 8s linear infinite;
+}
+
+.animate-orb-rotate-reverse {
+  animation: orb-rotate 12s linear infinite reverse;
+}
+
+.animate-wave {
+  animation: wave-move 1.2s ease-in-out infinite;
+}
