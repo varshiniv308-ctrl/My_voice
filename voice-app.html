@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="My Voice — record, transcribe, save and search voice notes." />
+  <meta name="theme-color" content="#0f172a" />
+  <title>My Voice — Voice Notes</title>
+  <link rel="stylesheet" href="/voice-app.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar" role="banner">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <h1 class="brand-name">My Voice</h1>
+    </div>
+    <nav class="topbar-meta" aria-label="Status">
+      <span id="status-pill" class="pill" data-status="idle">
+        <span class="pill-dot" aria-hidden="true"></span>
+        <span id="status-text">Idle</span>
+      </span>
+    </nav>
+  </header>
+
+  <main id="main" class="container" role="main">
+    <!-- Recorder -->
+    <section class="card recorder" aria-labelledby="recorder-title">
+      <header class="card-head">
+        <h2 id="recorder-title">New voice note</h2>
+        <p class="muted">Click record and speak. Your speech will be transcribed live.</p>
+      </header>
+
+      <div class="recorder-body">
+        <button id="btn-record" type="button" class="btn btn-primary btn-lg" aria-pressed="false">
+          <span class="btn-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="3" width="6" height="12" rx="3"></rect>
+              <path d="M5 11a7 7 0 0 0 14 0"></path>
+              <line x1="12" y1="18" x2="12" y2="22"></line>
+            </svg>
+          </span>
+          <span id="btn-record-label">Start recording</span>
+        </button>
+
+        <div class="wave" id="wave" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span>
+        </div>
+
+        <div class="transcript-wrap">
+          <label for="transcript" class="label">Transcript</label>
+          <textarea
+            id="transcript"
+            class="transcript"
+            rows="4"
+            placeholder="Your transcription will appear here. You can also type or edit before saving."
+            aria-live="polite"
+          ></textarea>
+        </div>
+
+        <div class="recorder-actions">
+          <input id="title" type="text" class="input" placeholder="Optional title" aria-label="Note title" maxlength="80" />
+          <button id="btn-clear" type="button" class="btn btn-ghost">Clear</button>
+          <button id="btn-save" type="button" class="btn btn-accent" disabled>Save note</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Notes list -->
+    <section class="card notes" aria-labelledby="notes-title">
+      <header class="card-head row">
+        <div>
+          <h2 id="notes-title">Saved notes</h2>
+          <p class="muted"><span id="note-count">0</span> total</p>
+        </div>
+        <div class="search">
+          <label class="sr-only" for="search">Search notes</label>
+          <input id="search" type="search" class="input" placeholder="Search notes…" />
+        </div>
+      </header>
+
+      <ul id="notes-list" class="notes-list" aria-live="polite">
+        <li class="empty" id="empty-state">No notes yet — record your first one above.</li>
+      </ul>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <footer class="footer">
+    <small class="muted">Tip: works best in Chrome / Edge (Web Speech API).</small>
+  </footer>
+
+  <script src="/voice-app.js" defer></script>
+</body>
+</html>

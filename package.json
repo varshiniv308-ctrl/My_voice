@@ -1,0 +1,16 @@
+{
+  "name": "my-voice",
+  "version": "1.0.0",
+  "description": "Voice Notes — record, transcribe, save and search voice notes in the browser.",
+  "main": "voice-server.js",
+  "scripts": {
+    "start": "node voice-server.js",
+    "dev": "node voice-server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
