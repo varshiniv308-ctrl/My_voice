@@ -1,0 +1,24 @@
+const { validationResult } = require('express-validator');
+
+/**
+ * Middleware to handle express-validator errors.
+ * Must be used AFTER validation chain definitions in routes.
+ */
+const validate = (req, res, next) => {
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    return res.status(422).json({
+      success: false,
+      message: 'Validation failed.',
+      errors: errors.array().map((err) => ({
+        field: err.path,
+        message: err.msg,
+      })),
+    });
+  }
+
+  next();
+};
+
+module.exports = validate;
